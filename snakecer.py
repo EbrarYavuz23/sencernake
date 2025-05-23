@@ -1,6 +1,7 @@
 import random
 import time
 import pygame
+import os
 from pygame import KEYDOWN, K_UP, K_DOWN, K_RIGHT, K_LEFT, K_1, K_2, K_3, K_4, K_5, K_RETURN
 
 SCREEN_SIZE = 800
@@ -11,6 +12,36 @@ selected_index = 0
 
 # Global high score variable to persist between game sessions
 HIGH_SCORE = 0
+
+# High score file path
+HIGH_SCORE_FILE = "resources/high_score.txt"
+
+# Load high score from file
+def load_high_score():
+    global HIGH_SCORE
+    try:
+        if os.path.exists(HIGH_SCORE_FILE):
+            with open(HIGH_SCORE_FILE, 'r') as file:
+                HIGH_SCORE = int(file.read().strip())
+                print(f"Loaded high score: {HIGH_SCORE}")
+    except Exception as e:
+        print(f"Error loading high score: {e}")
+        HIGH_SCORE = 0
+
+# Save high score to file
+def save_high_score():
+    global HIGH_SCORE
+    try:
+        # Make sure the directory exists
+        os.makedirs(os.path.dirname(HIGH_SCORE_FILE), exist_ok=True)
+        with open(HIGH_SCORE_FILE, 'w') as file:
+            file.write(str(HIGH_SCORE))
+            print(f"Saved high score: {HIGH_SCORE}")
+    except Exception as e:
+        print(f"Error saving high score: {e}")
+
+# Load high score at startup
+load_high_score()
 
 # Title Image With My Friends
 title_img = pygame.image.load("resources/title.png")  
@@ -78,6 +109,7 @@ def show_menu():
         draw_menu()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                save_high_score()  # Save high score before quitting
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -88,6 +120,7 @@ def show_menu():
                 elif event.key == pygame.K_RETURN:
                     selected = menu_items[selected_index]
                     if selected == "Quit":
+                        save_high_score()  # Save high score before quitting
                         pygame.quit()
                         sys.exit()
                     elif selected == "Start Game":
@@ -298,6 +331,8 @@ class Game:
             if self.score > HIGH_SCORE:
                 HIGH_SCORE = self.score
                 print(f"New High Score: {HIGH_SCORE}")
+                # Save high score immediately when it's updated
+                save_high_score()
 
         # Check if snake collides with itself
         for i in range(1, self.snake.length):
@@ -333,7 +368,6 @@ class Game:
         # Draw background and then text
         self.surface.blit(text_bg, (x_pos, y_pos))
         self.surface.blit(scores, (x_pos + padding // 2, y_pos))
-
 
     def show_game_over(self):
         global HIGH_SCORE
@@ -403,6 +437,7 @@ class Game:
                         pause = False
 
                 if event.type == pygame.QUIT:
+                    save_high_score()  # Save high score before quitting
                     running = False
                 elif event.type == self.SCREEN_UPDATE:
                     try:
