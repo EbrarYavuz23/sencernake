@@ -1,5 +1,3 @@
-import json 
-import os
 import random
 import time
 import pygame
@@ -10,6 +8,9 @@ BLOCK_WIDTH = 40
 
 menu_items = ["Start Game", "Credits", "Quit"]
 selected_index = 0
+
+# Global high score variable to persist between game sessions
+HIGH_SCORE = 0
 
 # Title Image With My Friends
 title_img = pygame.image.load("resources/title.png")  
@@ -27,6 +28,13 @@ def draw_menu():
         label = font.render(item, True, color)
         label_rect = label.get_rect(center=(SCREEN_SIZE // 2, 220 + i * 50))
         game.surface.blit(label, label_rect)
+        
+    # Display high score in menu
+    if HIGH_SCORE > 0:
+        high_score_font = pygame.font.SysFont("arial", 24)
+        high_score_text = high_score_font.render(f"High Score: {HIGH_SCORE}", True, (255, 255, 255))
+        high_score_rect = high_score_text.get_rect(center=(SCREEN_SIZE // 2, 400))
+        game.surface.blit(high_score_text, high_score_rect)
 
     pygame.display.update()
 
@@ -194,9 +202,6 @@ class Game:
         pygame.time.set_timer(self.SCREEN_UPDATE, self.timer)
         self.surface = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
         
-        # Load grass texture
-        #self.grass_texture = pygame.image.load("resources/grass_texture.png")
-        
         # Create grass pattern programmatically
         self.create_grass_pattern()
         
@@ -214,8 +219,6 @@ class Game:
         self.current_apple = self.apple_sequence[self.apple_index]
         
         self.score = 0
-        self.record = 0
-        self.retrieve_data()
         
     def create_grass_pattern(self):
         # Create a grass pattern surface
@@ -251,6 +254,8 @@ class Game:
                 self.surface.blit(self.grass_texture, (x, y))
 
     def play(self):
+        global HIGH_SCORE
+        
         pygame.time.set_timer(self.SCREEN_UPDATE, self.timer)
     
         # Move the snake first
@@ -289,15 +294,10 @@ class Game:
             
             print(f"Score: {self.score}")
 
-            if self.record < self.score:
-                self.record = self.score
-                self.save_data()
-
-        
-
-        if self.record < self.score:
-            self.record = self.score
-            self.save_data()
+            # Update high score if current score is higher
+            if self.score > HIGH_SCORE:
+                HIGH_SCORE = self.score
+                print(f"New High Score: {HIGH_SCORE}")
 
         # Check if snake collides with itself
         for i in range(1, self.snake.length):
@@ -305,40 +305,39 @@ class Game:
                 print("snake will die")
                 raise Exception("Collision Occurred")
 
-    def save_data(self):
-        data_folder_path = "./resources"
-        file_name = "data.json"
-        if not os.path.exists(data_folder_path):
-            os.makedirs(data_folder_path)
-
-        complete_path = os.path.join(data_folder_path, file_name)
-        data = {'record': self.record}
-        with open(complete_path, 'w') as file:
-            json.dump(data, file, indent=4)
-
-    def retrieve_data(self):
-        data_folder_path = os.path.join("./resources", "data.json")
-        if os.path.exists(data_folder_path):
-            with open(data_folder_path, 'r') as file:
-                data = json.load(file)
-
-            if data is not None:
-                self.record = data['record']
-
     def display_score(self):
+        global HIGH_SCORE
+
         font = pygame.font.SysFont('arial', 30)
-        msg = "Score: " + str(self.score) + " Record: " + str(self.record)
-        
+        msg = f"Score: {self.score}  High Score: {HIGH_SCORE}"
+        scores = font.render(msg, True, (200, 200, 200))
+
+        # Get size of the rendered text
+        text_width = scores.get_width()
+        text_height = scores.get_height()
+
+        # Add some padding
+        padding = 20
+        background_width = text_width + padding
+        background_height = text_height + 10
+
         # Create a semi-transparent background for the score text
-        text_bg = pygame.Surface((400, 40))
+        text_bg = pygame.Surface((background_width, background_height))
         text_bg.set_alpha(180)  # Semi-transparent
         text_bg.fill((0, 0, 0))
-        self.surface.blit(text_bg, (350, 10))
-        
-        scores = font.render(f"{msg}", True, (200, 200, 200))
-        self.surface.blit(scores, (350, 10))
+
+        # Set position
+        x_pos = SCREEN_SIZE - background_width - 10
+        y_pos = 10
+
+        # Draw background and then text
+        self.surface.blit(text_bg, (x_pos, y_pos))
+        self.surface.blit(scores, (x_pos + padding // 2, y_pos))
+
 
     def show_game_over(self):
+        global HIGH_SCORE
+        
         # Draw a semi-transparent overlay
         overlay = pygame.Surface((SCREEN_SIZE, SCREEN_SIZE))
         overlay.set_alpha(180)
@@ -346,8 +345,13 @@ class Game:
         self.surface.blit(overlay, (0, 0))
         
         font = pygame.font.SysFont('arial', 30)
-        line = font.render(f"Game over! score is {self.score}", True, (255, 255, 255))
+        line = font.render(f"Game over! Score: {self.score}", True, (255, 255, 255))
         self.surface.blit(line, (200, 300))
+        
+        # Show high score
+        high_score_line = font.render(f"High Score: {HIGH_SCORE}", True, (255, 255, 0))
+        self.surface.blit(high_score_line, (200, 350))
+        
         line1 = font.render(f"Press Enter to Restart", True, (255, 255, 255))
         self.surface.blit(line1, (200, 400))
         pygame.display.update()
