@@ -30,10 +30,10 @@ def init_sounds():
         pygame.mixer.init()
         
         # Load sound files
-        doom_soundtrack = pygame.mixer.Sound("resources/doom_soundtrack.wav")  # or .mp3
-        coin_sound = pygame.mixer.Sound("resources/coin_sound.wav")  # or .mp3
-        damn_sound = pygame.mixer.Sound("resources/damn_sound.wav")  # or .mp3
-        lose_effect = pygame.mixer.Sound("resources/lose_effect.wav")  # or .mp3
+        doom_soundtrack = pygame.mixer.Sound("resources/doom_soundtrack.wav")  
+        coin_sound = pygame.mixer.Sound("resources/coin_sound.wav")  
+        damn_sound = pygame.mixer.Sound("resources/damn_sound.wav")  
+        lose_effect = pygame.mixer.Sound("resources/lose_effect.wav")  
         
         print("Sound files loaded successfully!")
     except Exception as e:
