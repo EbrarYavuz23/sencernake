@@ -81,24 +81,31 @@ title_img = pygame.image.load("resources/title.png")
 
 def draw_menu():
     game.surface.fill((0, 0, 0))
-    font = pygame.font.SysFont("arial", 36)
-
-    # Title Image Area
-    img_rect = title_img.get_rect(center=(SCREEN_SIZE // 2, 120))
-    game.surface.blit(title_img, img_rect)
-
+    
+    # Game title at the top
+    title_font = pygame.font.SysFont("arial", 48, bold=True)
+    title_text = title_font.render("SENCERNAKE", True, (0, 255, 0))  # Green color
+    title_rect = title_text.get_rect(center=(SCREEN_SIZE // 2, 80))
+    game.surface.blit(title_text, title_rect)
+    
+    # Menu items
+    menu_font = pygame.font.SysFont("arial", 36)
     for i, item in enumerate(menu_items):
         color = (255, 255, 0) if i == selected_index else (255, 255, 255)
-        label = font.render(item, True, color)
-        label_rect = label.get_rect(center=(SCREEN_SIZE // 2, 220 + i * 50))
+        label = menu_font.render(item, True, color)
+        label_rect = label.get_rect(center=(SCREEN_SIZE // 2, 180 + i * 50))
         game.surface.blit(label, label_rect)
         
-    # Display high score in menu
+    # Display high score in the middle
     if HIGH_SCORE > 0:
         high_score_font = pygame.font.SysFont("arial", 24)
         high_score_text = high_score_font.render(f"High Score: {HIGH_SCORE}", True, (255, 255, 255))
-        high_score_rect = high_score_text.get_rect(center=(SCREEN_SIZE // 2, 400))
+        high_score_rect = high_score_text.get_rect(center=(SCREEN_SIZE // 2, 350))
         game.surface.blit(high_score_text, high_score_rect)
+
+    # Title Image at the bottom - moved here to avoid overlap
+    img_rect = title_img.get_rect(center=(SCREEN_SIZE // 2, SCREEN_SIZE - 150))
+    game.surface.blit(title_img, img_rect)
 
     pygame.display.update()
 
