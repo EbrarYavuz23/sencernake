@@ -21,10 +21,11 @@ HIGH_SCORE_FILE = "resources/high_score.txt"
 doom_soundtrack = None
 coin_sound = None
 damn_sound = None
+lose_effect = None
 
 # Initialize pygame and mixer
 def init_sounds():
-    global doom_soundtrack, coin_sound, damn_sound
+    global doom_soundtrack, coin_sound, damn_sound, lose_effect
     try:
         pygame.mixer.init()
         
@@ -32,6 +33,7 @@ def init_sounds():
         doom_soundtrack = pygame.mixer.Sound("resources/doom_soundtrack.wav")  # or .mp3
         coin_sound = pygame.mixer.Sound("resources/coin_sound.wav")  # or .mp3
         damn_sound = pygame.mixer.Sound("resources/damn_sound.wav")  # or .mp3
+        lose_effect = pygame.mixer.Sound("resources/lose_effect.wav")  # or .mp3
         
         print("Sound files loaded successfully!")
     except Exception as e:
@@ -40,6 +42,7 @@ def init_sounds():
         doom_soundtrack = None
         coin_sound = None
         damn_sound = None
+        lose_effect = None
 
 def play_sound(sound):
     """Helper function to safely play sounds"""
@@ -48,6 +51,21 @@ def play_sound(sound):
             sound.play()
     except Exception as e:
         print(f"Error playing sound: {e}")
+
+def play_looping_sound(sound):
+    """Helper function to safely play looping sounds"""
+    try:
+        if sound:
+            sound.play(-1)  # -1 means loop indefinitely
+    except Exception as e:
+        print(f"Error playing looping sound: {e}")
+
+def stop_all_sounds():
+    """Stop all currently playing sounds"""
+    try:
+        pygame.mixer.stop()
+    except Exception as e:
+        print(f"Error stopping sounds: {e}")
 
 # Load high score from file
 def load_high_score():
@@ -164,8 +182,10 @@ def show_menu():
                         pygame.quit()
                         sys.exit()
                     elif selected == "Start Game":
-                        # Play doom soundtrack when starting the game
-                        play_sound(doom_soundtrack)
+                        # Stop any currently playing sounds (including lose effect)
+                        stop_all_sounds()
+                        # Play doom soundtrack looping when starting the game
+                        play_looping_sound(doom_soundtrack)
                         return
                     elif selected == "Credits":
                         show_credits()
@@ -388,6 +408,12 @@ class Game:
         for i in range(1, self.snake.length):
             if self.snake.x[0] == self.snake.x[i] and self.snake.y[0] == self.snake.y[i]:
                 print("snake will die")
+                # Stop all background music first
+                stop_all_sounds()
+                # Wait a brief moment for the music to stop
+                time.sleep(0.1)
+                # Then play lose effect sound
+                play_sound(lose_effect)
                 raise Exception("Collision Occurred")
 
     def display_score(self):
@@ -484,7 +510,12 @@ class Game:
                         self.timer = 200
 
                     if event.key == K_RETURN:
-                        pause = False
+                        if pause:
+                            pause = False
+                            # Stop any currently playing sounds (including lose effect)
+                            stop_all_sounds()
+                            # Restart background music when resuming from game over
+                            play_looping_sound(doom_soundtrack)
 
                 if event.type == pygame.QUIT:
                     save_high_score()  # Save high score before quitting
