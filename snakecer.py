@@ -3,6 +3,7 @@ import time
 import pygame
 import os
 from pygame import KEYDOWN, K_UP, K_DOWN, K_RIGHT, K_LEFT, K_1, K_2, K_3, K_4, K_5, K_RETURN
+import sys
 
 SCREEN_SIZE = 800
 BLOCK_WIDTH = 40
@@ -15,6 +16,38 @@ HIGH_SCORE = 0
 
 # High score file path
 HIGH_SCORE_FILE = "resources/high_score.txt"
+
+# Sound variables
+doom_soundtrack = None
+coin_sound = None
+damn_sound = None
+
+# Initialize pygame and mixer
+def init_sounds():
+    global doom_soundtrack, coin_sound, damn_sound
+    try:
+        pygame.mixer.init()
+        
+        # Load sound files
+        doom_soundtrack = pygame.mixer.Sound("resources/doom_soundtrack.wav")  # or .mp3
+        coin_sound = pygame.mixer.Sound("resources/coin_sound.wav")  # or .mp3
+        damn_sound = pygame.mixer.Sound("resources/damn_sound.wav")  # or .mp3
+        
+        print("Sound files loaded successfully!")
+    except Exception as e:
+        print(f"Error loading sound files: {e}")
+        # Create dummy sound objects to prevent errors
+        doom_soundtrack = None
+        coin_sound = None
+        damn_sound = None
+
+def play_sound(sound):
+    """Helper function to safely play sounds"""
+    try:
+        if sound:
+            sound.play()
+    except Exception as e:
+        print(f"Error playing sound: {e}")
 
 # Load high score from file
 def load_high_score():
@@ -124,6 +157,8 @@ def show_menu():
                         pygame.quit()
                         sys.exit()
                     elif selected == "Start Game":
+                        # Play doom soundtrack when starting the game
+                        play_sound(doom_soundtrack)
                         return
                     elif selected == "Credits":
                         show_credits()
@@ -230,6 +265,10 @@ class Game:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Snake Game - PyGame")
+        
+        # Initialize sounds
+        init_sounds()
+        
         self.SCREEN_UPDATE = pygame.USEREVENT
         self.timer = 150
         pygame.time.set_timer(self.SCREEN_UPDATE, self.timer)
@@ -313,10 +352,14 @@ class Game:
         if self.snake.x[0] == self.current_apple.x and self.snake.y[0] == self.current_apple.y:
             if self.current_apple.is_toxic:
                 # Toxic apple gives -1 point and decreases snake length
+                # Play damn sound for Furkan (toxic apple)
+                play_sound(damn_sound)
                 self.score -= 1
                 self.snake.decrease()
             else:
                 # Regular apples give +1 point and increase snake length
+                # Play coin sound for Mehmet and Ebrar (regular apples)
+                play_sound(coin_sound)
                 self.score += 1
                 self.snake.increase()
 
@@ -452,9 +495,7 @@ class Game:
             pygame.display.update()
 
 
-# Make sure to import sys at the top of your file
-import sys
-
+# Main execution
 game = Game()
 show_menu()  # Show menu first
 game.run()   # Then start the game
